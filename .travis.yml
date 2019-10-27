@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t dordagani/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true dordagani/react-test npm test
+
+after_success:
+  - docker build -t dordagani/multi-client ./client
+  - docker build -t dordagani/multi-nginx ./nginx
+  - docker build -t dordagani/multi-server ./server
+  - docker build -t dordagani/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push dordagani/multi-client
+  - docker push dordagani/multi-nginx
+  - docker push dordagani/multi-server
+  - docker push dordagani/multi-worker
